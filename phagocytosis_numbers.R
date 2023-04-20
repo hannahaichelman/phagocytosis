@@ -2,12 +2,15 @@
 # and compares phagocytosis across symbiotic state and temperature in
 # Oculina arbuscula
 
+# Collab with Lys Isma, Kevin Wong, Maria Valadez Ingersoll
+
+# For questions contact hannahaichelman @ gmail.com
+
 library(tidyverse)
 library(dplyr)
 library(Rmisc)
 
-# read in raw data
-
+# read in raw data from FlowJo
 oc = read.csv("/Users/hannahaichelman/Documents/BU/RCN_Exchange_UMiami/oculina_raw_final.csv")
 
 head(oc)
@@ -23,7 +26,7 @@ oc_clean = oc %>%
 
 str(oc_clean)
 
-# subset data to only look at treatments, since data has been corrected to controls
+# subset data to only look at bead and Ecoli treatments, since data has been corrected to controls
 oc_treatments = oc_clean %>%
   subset(Treatment == "Beads" | Treatment == "Ecoli")
 
@@ -36,14 +39,12 @@ oc_summary = oc_treatments %>%
   droplevels()
 
 
-# PLOT
+# PLOT phagocytes
 
-# xlab = temperature, ylab = percent, color = Treatment, facet by genotype
-
-
+# use summarySE to group data for plotting
 cell_means <- summarySE(oc_summary, measurevar="Adj_Percent", groupvars=c("Temperature","Treatment","Genotype"))
 
-# plot, treatment x axis colored by lineage data figure
+# plot, temperature  x axis colored by beads/ecoli treatment
 plot <- ggplot(oc_summary, aes(x = Temperature, y = Adj_Percent))+
   theme_bw()+
   geom_jitter(aes(color = Treatment, fill = Treatment),
@@ -63,26 +64,22 @@ plot <- ggplot(oc_summary, aes(x = Temperature, y = Adj_Percent))+
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
   facet_wrap(~Genotype, nrow = 2, ncol = 4)
 plot
-
-ggsave(plot, filename = "Phagocyte_Number.pdf", width=6, height=4, units=c("in"), useDingbats=FALSE)
-
-
+#save plot
+ggsave(plot, filename = "./plots/Phagocyte_Number.pdf", width=6, height=4, units=c("in"), useDingbats=FALSE)
 
 
-#
+# Now look at # of symbionts per sample
 oc_syms = oc_clean %>%
   subset(Treatment == "Control_symbionts") %>%
   droplevels()
 
-# PLOT
-
-# xlab = temperature, ylab = percent, color = Treatment, facet by genotype
-
+# PLOT symbiont cell numbers
+# plotting 'Statistic' here on the y-axis in order to plot the ratio of symbiont cells to coral cells -
+# not absolute number of symbionts
 
 cell_means <- summarySE(oc_syms, measurevar="Statistic", groupvars=c("Temperature","Treatment","Genotype"))
 
-# plot ratio of symbiont cells to coral cells - not absolute number of symbionts
-plot <- ggplot(oc_syms, aes(x = Temperature, y = Statistic))+
+plot_sym <- ggplot(oc_syms, aes(x = Temperature, y = Statistic))+
   theme_bw()+
   geom_jitter(aes(color = Treatment, fill = Treatment),
               position=position_dodge(width=0.3),
@@ -94,7 +91,7 @@ plot <- ggplot(oc_syms, aes(x = Temperature, y = Statistic))+
   ylab("Adjusted Percent of Symbiont Cells")+
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
   facet_wrap(~Genotype, nrow = 2, ncol = 4)
-plot
+plot_sym
 
-ggsave(plot, filename = "Symbiont_Number.pdf", width=6, height=4, units=c("in"), useDingbats=FALSE)
+ggsave(plot_sym, filename = "./plots/Symbiont_Number.pdf", width=6, height=4, units=c("in"), useDingbats=FALSE)
 
